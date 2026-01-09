@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}{{ app_name }} - Home{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Hero Section -->
+    <div class="text-center py-16">
+        <h1 class="text-4xl font-bold text-gray-800 mb-4">
+            Task Management System
+        </h1>
+        <p class="text-xl text-gray-600 mb-8">
+            A demo project showcasing engineering best practices
+        </p>
+
+        <!-- CTA Buttons -->
+        <div class="flex justify-center space-x-4">
+            <a href="/docs"
+               class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition font-medium">
+                View API Docs
+            </a>
+            <a href="/register"
+               class="border border-blue-500 text-blue-500 px-6 py-3 rounded-lg hover:bg-blue-50 transition font-medium">
+                Get Started
+            </a>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="grid md:grid-cols-3 gap-8 py-12">
+        <div class="bg-white rounded-xl p-6 shadow-sm">
+            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Clean Architecture</h3>
+            <p class="text-gray-600">
+                Layered architecture with clear separation: Controller, Service, Repository patterns.
+            </p>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 shadow-sm">
+            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Type Safety</h3>
+            <p class="text-gray-600">
+                Full type hints with Pydantic validation and SQLAlchemy 2.0 typed queries.
+            </p>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 shadow-sm">
+            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Auto Documentation</h3>
+            <p class="text-gray-600">
+                Swagger UI & ReDoc automatically generated from code annotations.
+            </p>
+        </div>
+    </div>
+
+    <!-- Tech Stack -->
+    <div class="bg-white rounded-xl p-8 shadow-sm">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Tech Stack</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div class="text-center">
+                <div class="text-3xl mb-2">🚀</div>
+                <div class="font-medium text-gray-800">FastAPI</div>
+                <div class="text-sm text-gray-500">Web Framework</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl mb-2">🗄️</div>
+                <div class="font-medium text-gray-800">SQLAlchemy 2.0</div>
+                <div class="text-sm text-gray-500">ORM</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl mb-2">🐬</div>
+                <div class="font-medium text-gray-800">MySQL</div>
+                <div class="text-sm text-gray-500">Database</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl mb-2">🔐</div>
+                <div class="font-medium text-gray-800">JWT</div>
+                <div class="text-sm text-gray-500">Authentication</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="py-12 text-center">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Quick Links</h2>
+        <div class="flex justify-center space-x-6">
+            <a href="/docs" class="text-blue-500 hover:text-blue-600">Swagger UI</a>
+            <a href="/redoc" class="text-blue-500 hover:text-blue-600">ReDoc</a>
+            <a href="/health" class="text-blue-500 hover:text-blue-600">Health Check</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

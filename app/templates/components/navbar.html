@@ -1,0 +1,46 @@
+<nav class="bg-white shadow-sm">
+    <div class="container mx-auto px-4">
+        <div class="flex justify-between items-center h-16">
+            <!-- Logo -->
+            <a href="/" class="flex items-center space-x-2">
+                <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                </svg>
+                <span class="font-semibold text-xl text-gray-800">TaskFlow</span>
+            </a>
+
+            <!-- Navigation Links (shown when logged in) -->
+            <div id="nav-links" class="hidden md:flex items-center space-x-6">
+                <a href="/tasks" class="text-gray-600 hover:text-blue-500 transition">Tasks</a>
+                <a href="/categories" class="text-gray-600 hover:text-blue-500 transition">Categories</a>
+                <a href="/tags" class="text-gray-600 hover:text-blue-500 transition">Tags</a>
+            </div>
+
+            <!-- User Menu -->
+            <div class="flex items-center space-x-4">
+                <div id="auth-buttons">
+                    <a href="/login" class="text-gray-600 hover:text-blue-500 transition">Login</a>
+                    <a href="/register" class="ml-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
+                        Sign Up
+                    </a>
+                </div>
+                <div id="user-menu" class="hidden relative">
+                    <button onclick="toggleDropdown()" class="flex items-center space-x-2 text-gray-700 hover:text-blue-500">
+                        <span id="username-display">User</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="dropdown-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50">
+                        <a href="/profile" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Profile</a>
+                        <hr class="my-2">
+                        <button onclick="logout()" class="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>

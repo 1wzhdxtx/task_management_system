@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Categories - Task Management{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Categories</h1>
+        <button onclick="openCreateModal()"
+                class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition flex items-center">
+            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            New Category
+        </button>
+    </div>
+
+    <!-- Category List -->
+    <div id="category-list" class="grid gap-4 md:grid-cols-2">
+        <div class="text-center text-gray-500 py-8 col-span-2">Loading categories...</div>
+    </div>
+</div>
+
+<!-- Create/Edit Category Modal -->
+<div id="category-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div class="p-6">
+                <h3 id="modal-title" class="text-xl font-bold text-gray-800 mb-4">New Category</h3>
+                <form id="category-form" onsubmit="handleSubmit(event)">
+                    <input type="hidden" name="categoryId" value="">
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                            <input type="text" name="name" required maxlength="50"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <textarea name="description" rows="2" maxlength="200"
+                                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Color</label>
+                            <div class="flex items-center space-x-3">
+                                <input type="color" name="color" value="#3B82F6"
+                                       class="w-12 h-10 border border-gray-300 rounded cursor-pointer">
+                                <span id="color-preview" class="text-sm text-gray-500">#3B82F6</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" onclick="closeModal()"
+                                class="px-4 py-2 text-gray-600 hover:text-gray-800">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                            Save
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const API_BASE = '/api/v1';
+
+document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/login';
+        return;
+    }
+    loadCategories();
+
+    // Update color preview
+    document.querySelector('[name="color"]').addEventListener('input', (e) => {
+        document.getElementById('color-preview').textContent = e.target.value;
+    });
+});
+
+function getAuthHeaders() {
+    return {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json'
+    };
+}
+
+async function loadCategories() {
+    try {
+        const response = await fetch(`${API_BASE}/categories`, { headers: getAuthHeaders() });
+        if (response.status === 401) {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+            return;
+        }
+
+        const categories = await response.json();
+        renderCategories(categories);
+    } catch (error) {
+        console.error('Failed to load categories:', error);
+    }
+}
+
+function renderCategories(categories) {
+    const container = document.getElementById('category-list');
+
+    if (categories.length === 0) {
+        container.innerHTML = '<div class="text-center text-gray-500 py-8 col-span-2">No categories yet. Create your first category!</div>';
+        return;
+    }
+
+    container.innerHTML = categories.map(cat => `
+        <div class="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition">
+            <div class="flex items-start justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-4 h-4 rounded" style="background-color: ${cat.color}"></div>
+                    <div>
+                        <h3 class="font-medium text-gray-800">${cat.name}</h3>
+                        ${cat.description ? `<p class="text-sm text-gray-500">${cat.description}</p>` : ''}
+                    </div>
+                </div>
+                <div class="flex space-x-1">
+                    <button onclick="editCategory(${cat.id})" class="p-1 text-gray-400 hover:text-blue-500">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                    </button>
+                    <button onclick="deleteCategory(${cat.id}, '${cat.name}')" class="p-1 text-gray-400 hover:text-red-500">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function openCreateModal() {
+    document.getElementById('modal-title').textContent = 'New Category';
+    document.getElementById('category-form').reset();
+    document.querySelector('[name="categoryId"]').value = '';
+    document.querySelector('[name="color"]').value = '#3B82F6';
+    document.getElementById('color-preview').textContent = '#3B82F6';
+    document.getElementById('category-modal').classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('category-modal').classList.add('hidden');
+}
+
+async function editCategory(categoryId) {
+    try {
+        const response = await fetch(`${API_BASE}/categories/${categoryId}`, { headers: getAuthHeaders() });
+        const category = await response.json();
+
+        document.getElementById('modal-title').textContent = 'Edit Category';
+        const form = document.getElementById('category-form');
+        form.querySelector('[name="categoryId"]').value = category.id;
+        form.querySelector('[name="name"]').value = category.name;
+        form.querySelector('[name="description"]').value = category.description || '';
+        form.querySelector('[name="color"]').value = category.color;
+        document.getElementById('color-preview').textContent = category.color;
+
+        document.getElementById('category-modal').classList.remove('hidden');
+    } catch (error) {
+        console.error('Failed to load category:', error);
+    }
+}
+
+async function handleSubmit(event) {
+    event.preventDefault();
+    const form = event.target;
+    const categoryId = form.querySelector('[name="categoryId"]').value;
+
+    const data = {
+        name: form.querySelector('[name="name"]').value,
+        description: form.querySelector('[name="description"]').value || null,
+        color: form.querySelector('[name="color"]').value
+    };
+
+    const url = categoryId ? `${API_BASE}/categories/${categoryId}` : `${API_BASE}/categories`;
+    const method = categoryId ? 'PUT' : 'POST';
+
+    try {
+        const response = await fetch(url, {
+            method,
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            closeModal();
+            loadCategories();
+        } else {
+            const error = await response.json();
+            alert(error.detail || 'Failed to save category');
+        }
+    } catch (error) {
+        console.error('Failed to save category:', error);
+    }
+}
+
+async function deleteCategory(categoryId, name) {
+    if (!confirm(`Delete category "${name}"? Tasks in this category will not be deleted.`)) return;
+
+    try {
+        await fetch(`${API_BASE}/categories/${categoryId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+        loadCategories();
+    } catch (error) {
+        console.error('Failed to delete category:', error);
+    }
+}
+</script>
+{% endblock %}

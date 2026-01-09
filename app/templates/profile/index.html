@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Task Management{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">Profile Settings</h1>
+
+    <!-- Profile Card -->
+    <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">Account Information</h2>
+
+        <!-- Success/Error Message -->
+        <div id="message" class="hidden p-3 rounded-lg mb-4"></div>
+
+        <form id="profile-form" onsubmit="handleProfileUpdate(event)">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                    <input type="text" name="username" required
+                           pattern="^[a-zA-Z0-9_]+$"
+                           minlength="3" maxlength="50"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <p class="text-xs text-gray-500 mt-1">3-50 characters, letters, numbers, and underscore only</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" name="email" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Member Since</label>
+                    <p id="member-since" class="text-gray-600">-</p>
+                </div>
+
+                <button type="submit"
+                        class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition font-medium">
+                    Update Profile
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Change Password -->
+    <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">Change Password</h2>
+
+        <div id="password-message" class="hidden p-3 rounded-lg mb-4"></div>
+
+        <form id="password-form" onsubmit="handlePasswordChange(event)">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                    <input type="password" name="password" required minlength="6"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                    <input type="password" name="confirmPassword" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <button type="submit"
+                        class="w-full bg-gray-800 text-white py-2 rounded-lg hover:bg-gray-900 transition font-medium">
+                    Change Password
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Account Statistics -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">Account Statistics</h2>
+        <div class="grid grid-cols-3 gap-4 text-center">
+            <div>
+                <div class="text-2xl font-bold text-blue-500" id="stat-tasks">-</div>
+                <div class="text-sm text-gray-500">Total Tasks</div>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-green-500" id="stat-completed">-</div>
+                <div class="text-sm text-gray-500">Completed</div>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-purple-500" id="stat-rate">-</div>
+                <div class="text-sm text-gray-500">Completion Rate</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const API_BASE = '/api/v1';
+
+document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/login';
+        return;
+    }
+    loadProfile();
+    loadStatistics();
+});
+
+function getAuthHeaders() {
+    return {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json'
+    };
+}
+
+function showMessage(elementId, message, isError = false) {
+    const el = document.getElementById(elementId);
+    el.textContent = message;
+    el.className = `p-3 rounded-lg mb-4 ${isError ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`;
+    el.classList.remove('hidden');
+    setTimeout(() => el.classList.add('hidden'), 3000);
+}
+
+async function loadProfile() {
+    try {
+        const response = await fetch(`${API_BASE}/users/me`, { headers: getAuthHeaders() });
+        if (response.status === 401) {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+            return;
+        }
+
+        const user = await response.json();
+        document.querySelector('[name="username"]').value = user.username;
+        document.querySelector('[name="email"]').value = user.email;
+        document.getElementById('member-since').textContent = new Date(user.created_at).toLocaleDateString('zh-CN', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    } catch (error) {
+        console.error('Failed to load profile:', error);
+    }
+}
+
+async function loadStatistics() {
+    try {
+        const response = await fetch(`${API_BASE}/tasks/statistics`, { headers: getAuthHeaders() });
+        const stats = await response.json();
+
+        document.getElementById('stat-tasks').textContent = stats.total;
+        document.getElementById('stat-completed').textContent = stats.by_status.completed || 0;
+        document.getElementById('stat-rate').textContent = `${stats.completion_rate}%`;
+    } catch (error) {
+        console.error('Failed to load statistics:', error);
+    }
+}
+
+async function handleProfileUpdate(event) {
+    event.preventDefault();
+    const form = event.target;
+
+    const data = {
+        username: form.querySelector('[name="username"]').value,
+        email: form.querySelector('[name="email"]').value
+    };
+
+    try {
+        const response = await fetch(`${API_BASE}/users/me`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            showMessage('message', 'Profile updated successfully!');
+            // Update navbar username
+            const usernameDisplay = document.getElementById('username-display');
+            if (usernameDisplay) {
+                usernameDisplay.textContent = data.username;
+            }
+        } else {
+            const error = await response.json();
+            showMessage('message', error.detail || 'Failed to update profile', true);
+        }
+    } catch (error) {
+        showMessage('message', 'Network error. Please try again.', true);
+    }
+}
+
+async function handlePasswordChange(event) {
+    event.preventDefault();
+    const form = event.target;
+
+    const password = form.querySelector('[name="password"]').value;
+    const confirmPassword = form.querySelector('[name="confirmPassword"]').value;
+
+    if (password !== confirmPassword) {
+        showMessage('password-message', 'Passwords do not match', true);
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/users/me`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ password })
+        });
+
+        if (response.ok) {
+            showMessage('password-message', 'Password changed successfully!');
+            form.reset();
+        } else {
+            const error = await response.json();
+            showMessage('password-message', error.detail || 'Failed to change password', true);
+        }
+    } catch (error) {
+        showMessage('password-message', 'Network error. Please try again.', true);
+    }
+}
+</script>
+{% endblock %}

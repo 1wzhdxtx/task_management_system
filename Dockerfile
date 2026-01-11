@@ -4,6 +4,9 @@ FROM python:3.12-slim as builder
 WORKDIR /app
 
 # Install build dependencies
+# Remove docker-clean to avoid APT::Update::Post-Invoke issues on some systems
+RUN rm -f /etc/apt/apt.conf.d/docker-clean; \
+    echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
@@ -24,6 +27,9 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Install runtime dependencies
+# Remove docker-clean to avoid APT::Update::Post-Invoke issues on some systems
+RUN rm -f /etc/apt/apt.conf.d/docker-clean; \
+    echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/* \

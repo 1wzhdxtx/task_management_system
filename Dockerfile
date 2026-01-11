@@ -1,15 +1,10 @@
-# Build stage
-FROM python:3.12-slim as builder
+# Build stage - using Alpine for lower memory usage
+FROM python:3.12-alpine as builder
 
 WORKDIR /app
 
-# Install build dependencies
-# Remove docker-clean to avoid APT::Update::Post-Invoke issues on some systems
-RUN rm -f /etc/apt/apt.conf.d/docker-clean; \
-    echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+# Install build dependencies (Alpine uses apk, much lighter than apt)
+RUN apk add --no-cache build-base
 
 # Create virtual environment
 RUN python -m venv /opt/venv
@@ -22,12 +17,12 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 
 # Production stage
-FROM python:3.12-slim
+FROM python:3.12-alpine
 
 WORKDIR /app
 
-# Create non-root user (no extra packages needed)
-RUN useradd --create-home --shell /bin/bash appuser
+# Create non-root user
+RUN adduser -D -s /bin/sh appuser
 
 # Copy virtual environment from builder
 COPY --from=builder /opt/venv /opt/venv
@@ -45,7 +40,7 @@ USER appuser
 # Expose port
 EXPOSE 8000
 
-# Health check (using Python instead of curl to avoid extra dependencies)
+# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 

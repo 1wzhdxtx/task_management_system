@@ -110,6 +110,13 @@
                                 <option value="">No Category</option>
                             </select>
                         </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+                            <div id="modal-tags" class="flex flex-wrap gap-2 p-3 border border-gray-300 rounded-lg min-h-[42px]">
+                                <span class="text-gray-400 text-sm">Loading tags...</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="flex justify-end space-x-3 mt-6">
@@ -134,6 +141,8 @@
 <script>
 const API_BASE = '/api/v1';
 let currentPage = 1;
+let allTags = [];
+let selectedTagIds = [];
 
 // Check auth on page load
 document.addEventListener('DOMContentLoaded', () => {
@@ -143,6 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
     loadCategories();
+    loadTags();
     loadTasks();
     loadStatistics();
 });
@@ -194,6 +204,47 @@ async function loadCategories() {
     } catch (error) {
         console.error('Failed to load categories:', error);
     }
+}
+
+async function loadTags() {
+    try {
+        const response = await fetch(`${API_BASE}/tags`, { headers: getAuthHeaders() });
+        allTags = await response.json();
+        renderTagSelector();
+    } catch (error) {
+        console.error('Failed to load tags:', error);
+    }
+}
+
+function renderTagSelector() {
+    const container = document.getElementById('modal-tags');
+    if (allTags.length === 0) {
+        container.innerHTML = '<span class="text-gray-400 text-sm">No tags yet. <a href="/tags" class="text-blue-500 hover:underline">Create tags</a></span>';
+        return;
+    }
+
+    container.innerHTML = allTags.map(tag => `
+        <button type="button" onclick="toggleTag(${tag.id})"
+                id="tag-btn-${tag.id}"
+                class="px-3 py-1 text-sm rounded-full border-2 transition-all ${
+                    selectedTagIds.includes(tag.id)
+                    ? 'border-current'
+                    : 'border-transparent opacity-60 hover:opacity-100'
+                }"
+                style="background-color: ${tag.color}20; color: ${tag.color}; ${selectedTagIds.includes(tag.id) ? 'border-color: ' + tag.color : ''}">
+            ${tag.name}
+        </button>
+    `).join('');
+}
+
+function toggleTag(tagId) {
+    const index = selectedTagIds.indexOf(tagId);
+    if (index > -1) {
+        selectedTagIds.splice(index, 1);
+    } else {
+        selectedTagIds.push(tagId);
+    }
+    renderTagSelector();
 }
 
 async function loadStatistics() {
@@ -287,6 +338,8 @@ function openCreateModal() {
     document.getElementById('modal-title').textContent = 'New Task';
     document.getElementById('task-form').reset();
     document.querySelector('[name="taskId"]').value = '';
+    selectedTagIds = [];
+    renderTagSelector();
     document.getElementById('task-modal').classList.remove('hidden');
 }
 
@@ -310,6 +363,10 @@ async function editTask(taskId) {
             form.querySelector('[name="due_date"]').value = task.due_date.slice(0, 16);
         }
 
+        // Restore selected tags
+        selectedTagIds = task.tags ? task.tags.map(t => t.id) : [];
+        renderTagSelector();
+
         document.getElementById('task-modal').classList.remove('hidden');
     } catch (error) {
         console.error('Failed to load task:', error);
@@ -326,7 +383,8 @@ async function handleTaskSubmit(event) {
         description: form.querySelector('[name="description"]').value || null,
         priority: form.querySelector('[name="priority"]').value,
         category_id: form.querySelector('[name="category_id"]').value || null,
-        due_date: form.querySelector('[name="due_date"]').value || null
+        due_date: form.querySelector('[name="due_date"]').value || null,
+        tag_ids: selectedTagIds
     };
 
     const url = taskId ? `${API_BASE}/tasks/${taskId}` : `${API_BASE}/tasks`;
